@@ -4,10 +4,16 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	"sync"
 )
 
 type pixel struct {
 	r, g, b, a float32
+}
+
+type pixelSrcDst struct {
+	src []pixel
+	dst []pixel
 }
 
 type imageType int
@@ -490,4 +496,32 @@ func (p *pixelSetter) setPixelColumn(x int, buf []pixel) {
 	for i, y := 0, p.bounds.Min.Y; i < len(buf); i, y = i+1, y+1 {
 		p.setPixel(x, y, buf[i])
 	}
+}
+
+var pixelBufPool = &sync.Pool{
+	New: func() interface{} {
+		return &pixelSrcDst{
+			src: make([]pixel, 0),
+			dst: make([]pixel, 0),
+		}
+	},
+}
+
+func getPixelBuf(srcLen, dstLen int) *pixelSrcDst {
+	v := pixelBufPool.Get().(*pixelSrcDst)
+	if srcLen > cap(v.src) {
+		v.src = make([]pixel, srcLen)
+	}
+	if dstLen > cap(v.dst) {
+		v.dst = make([]pixel, dstLen)
+	}
+	v.src = v.src[:srcLen]
+	v.dst = v.dst[:dstLen]
+	return v
+}
+
+func putPixelBuf(buf *pixelSrcDst) {
+	buf.src = buf.src[:0]
+	buf.dst = buf.dst[:0]
+	pixelBufPool.Put(buf)
 }

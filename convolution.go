@@ -285,12 +285,13 @@ func convolve1dv(dst draw.Image, src image.Image, kernel []float32, options *Opt
 	pixGetter := newPixelGetter(src)
 	pixSetter := newPixelSetter(dst)
 	parallelize(options.Parallelization, srcb.Min.X, srcb.Max.X, func(start, stop int) {
-		srcBuf := make([]pixel, srcb.Dy())
-		dstBuf := make([]pixel, srcb.Dy())
+		buf := getPixelBuf(srcb.Dy(), srcb.Dy())
+		defer putPixelBuf(buf)
+
 		for x := start; x < stop; x++ {
-			pixGetter.getPixelColumn(x, &srcBuf)
-			convolveLine(dstBuf, srcBuf, weights)
-			pixSetter.setPixelColumn(dstb.Min.X+x-srcb.Min.X, dstBuf)
+			pixGetter.getPixelColumn(x, &buf.src)
+			convolveLine(buf.dst, buf.src, weights)
+			pixSetter.setPixelColumn(dstb.Min.X+x-srcb.Min.X, buf.dst)
 		}
 	})
 }
@@ -310,12 +311,13 @@ func convolve1dh(dst draw.Image, src image.Image, kernel []float32, options *Opt
 	pixGetter := newPixelGetter(src)
 	pixSetter := newPixelSetter(dst)
 	parallelize(options.Parallelization, srcb.Min.Y, srcb.Max.Y, func(start, stop int) {
-		srcBuf := make([]pixel, srcb.Dx())
-		dstBuf := make([]pixel, srcb.Dx())
+		buf := getPixelBuf(srcb.Dx(), srcb.Dx())
+		defer putPixelBuf(buf)
+
 		for y := start; y < stop; y++ {
-			pixGetter.getPixelRow(y, &srcBuf)
-			convolveLine(dstBuf, srcBuf, weights)
-			pixSetter.setPixelRow(dstb.Min.Y+y-srcb.Min.Y, dstBuf)
+			pixGetter.getPixelRow(y, &buf.src)
+			convolveLine(buf.dst, buf.src, weights)
+			pixSetter.setPixelRow(dstb.Min.Y+y-srcb.Min.Y, buf.dst)
 		}
 	})
 }
