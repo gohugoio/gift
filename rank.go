@@ -58,7 +58,8 @@ func (p *rankFilter) Draw(dst draw.Image, src image.Image, options *Options) {
 	pixSetter := newPixelSetter(dst)
 
 	parallelize(options.Parallelization, srcb.Min.Y, srcb.Max.Y, func(start, stop int) {
-		pxbuf := []pixel{}
+		buf := getPixelBuf(0, 0)
+		defer putPixelBuf(buf)
 
 		var rbuf, gbuf, bbuf, abuf []float32
 		if p.mode == rankMedian {
@@ -72,7 +73,7 @@ func (p *rankFilter) Draw(dst draw.Image, src image.Image, options *Options) {
 
 		for y := start; y < stop; y++ {
 			// Init buffer.
-			pxbuf = pxbuf[:0]
+			buf.src = buf.src[:0]
 			for i := srcb.Min.X - kradius; i <= srcb.Min.X+kradius; i++ {
 				for j := y - kradius; j <= y+kradius; j++ {
 					kx, ky := i, j
@@ -86,7 +87,7 @@ func (p *rankFilter) Draw(dst draw.Image, src image.Image, options *Options) {
 					} else if ky > srcb.Max.Y-1 {
 						ky = srcb.Max.Y - 1
 					}
-					pxbuf = append(pxbuf, pixGetter.getPixel(kx, ky))
+					buf.src = append(buf.src, pixGetter.getPixel(kx, ky))
 				}
 			}
 
@@ -115,7 +116,7 @@ func (p *rankFilter) Draw(dst draw.Image, src image.Image, options *Options) {
 							}
 						}
 
-						px := pxbuf[i*ksize+j]
+						px := buf.src[i*ksize+j]
 						if p.mode == rankMedian {
 							rbuf = append(rbuf, px.r)
 							gbuf = append(gbuf, px.g)
@@ -165,8 +166,8 @@ func (p *rankFilter) Draw(dst draw.Image, src image.Image, options *Options) {
 
 				// Rotate buffer columns.
 				if x < srcb.Max.X-1 {
-					copy(pxbuf[0:], pxbuf[ksize:])
-					pxbuf = pxbuf[0 : ksize*(ksize-1)]
+					copy(buf.src[0:], buf.src[ksize:])
+					buf.src = buf.src[0 : ksize*(ksize-1)]
 					kx := x + 1 + kradius
 					if kx > srcb.Max.X-1 {
 						kx = srcb.Max.X - 1
@@ -178,7 +179,7 @@ func (p *rankFilter) Draw(dst draw.Image, src image.Image, options *Options) {
 						} else if ky > srcb.Max.Y-1 {
 							ky = srcb.Max.Y - 1
 						}
-						pxbuf = append(pxbuf, pixGetter.getPixel(kx, ky))
+						buf.src = append(buf.src, pixGetter.getPixel(kx, ky))
 					}
 				}
 			}

@@ -147,12 +147,13 @@ func resizeHorizontal(dst draw.Image, src image.Image, w int, resampling Resampl
 	pixSetter := newPixelSetter(dst)
 
 	parallelize(options.Parallelization, srcb.Min.Y, srcb.Max.Y, func(start, stop int) {
-		srcBuf := make([]pixel, srcb.Dx())
-		dstBuf := make([]pixel, w)
+		buf := getPixelBuf(srcb.Dx(), w)
+		defer putPixelBuf(buf)
+
 		for srcy := start; srcy < stop; srcy++ {
-			pixGetter.getPixelRow(srcy, &srcBuf)
-			resizeLine(dstBuf, srcBuf, weights)
-			pixSetter.setPixelRow(dstb.Min.Y+srcy-srcb.Min.Y, dstBuf)
+			pixGetter.getPixelRow(srcy, &buf.src)
+			resizeLine(buf.dst, buf.src, weights)
+			pixSetter.setPixelRow(dstb.Min.Y+srcy-srcb.Min.Y, buf.dst)
 		}
 	})
 }
@@ -167,12 +168,13 @@ func resizeVertical(dst draw.Image, src image.Image, h int, resampling Resamplin
 	pixSetter := newPixelSetter(dst)
 
 	parallelize(options.Parallelization, srcb.Min.X, srcb.Max.X, func(start, stop int) {
-		srcBuf := make([]pixel, srcb.Dy())
-		dstBuf := make([]pixel, h)
+		buf := getPixelBuf(srcb.Dy(), h)
+		defer putPixelBuf(buf)
+
 		for srcx := start; srcx < stop; srcx++ {
-			pixGetter.getPixelColumn(srcx, &srcBuf)
-			resizeLine(dstBuf, srcBuf, weights)
-			pixSetter.setPixelColumn(dstb.Min.X+srcx-srcb.Min.X, dstBuf)
+			pixGetter.getPixelColumn(srcx, &buf.src)
+			resizeLine(buf.dst, buf.src, weights)
+			pixSetter.setPixelColumn(dstb.Min.X+srcx-srcb.Min.X, buf.dst)
 		}
 	})
 }
