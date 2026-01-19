@@ -142,7 +142,7 @@ func pixelFromColor(c color.Color) (px pixel) {
 
 func convertPalette(p []color.Color) []pixel {
 	pal := make([]pixel, len(p))
-	for i := 0; i < len(p); i++ {
+	for i := range p {
 		pal[i] = pixelFromColor(p[i])
 	}
 	return pal
@@ -499,7 +499,7 @@ func (p *pixelSetter) setPixelColumn(x int, buf []pixel) {
 }
 
 var pixelBufPool = &sync.Pool{
-	New: func() interface{} {
+	New: func() any {
 		return &pixelSrcDst{
 			src: make([]pixel, 0),
 			dst: make([]pixel, 0),

@@ -81,17 +81,11 @@ func prepareResampWeights(dstSize, srcSize int, resampling Resampling) [][]resam
 	result := make([][]resampWeight, dstSize)
 	tmp := make([]resampWeight, 0, dstSize*int(radius+2)*2)
 
-	for i := 0; i < dstSize; i++ {
+	for i := range dstSize {
 		center := (float32(i)+0.5)*delta - 0.5
 
-		left := int(math.Ceil(float64(center - radius)))
-		if left < 0 {
-			left = 0
-		}
-		right := int(math.Floor(float64(center + radius)))
-		if right > srcSize-1 {
-			right = srcSize - 1
-		}
+		left := max(int(math.Ceil(float64(center-radius))), 0)
+		right := min(int(math.Floor(float64(center+radius))), srcSize-1)
 
 		var sum float32
 		for j := left; j <= right; j++ {
@@ -118,7 +112,7 @@ func prepareResampWeights(dstSize, srcSize int, resampling Resampling) [][]resam
 }
 
 func resizeLine(dst []pixel, src []pixel, weights [][]resampWeight) {
-	for i := 0; i < len(dst); i++ {
+	for i := range dst {
 		var r, g, b, a float32
 		for _, w := range weights[i] {
 			c := src[w.index]
