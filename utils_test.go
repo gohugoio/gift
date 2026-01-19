@@ -28,7 +28,7 @@ func testParallelizeN(enabled bool, n, procs int) bool {
 			data[i]++
 		}
 	})
-	for i := 0; i < n; i++ {
+	for i := range n {
 		if data[i] != 1 {
 			return false
 		}
@@ -37,8 +37,8 @@ func testParallelizeN(enabled bool, n, procs int) bool {
 }
 
 func TestSplitRange(t *testing.T) {
-	for count := 0; count < 100; count++ {
-		for procs := 0; procs < 100; procs++ {
+	for count := range 100 {
+		for procs := range 100 {
 			start := -55
 
 			var parts [][2]int
@@ -46,10 +46,7 @@ func TestSplitRange(t *testing.T) {
 				parts = append(parts, [2]int{start, stop})
 			})
 
-			wantLen := procs
-			if wantLen < 1 {
-				wantLen = 1
-			}
+			wantLen := max(procs, 1)
 			if wantLen > count {
 				wantLen = count
 			}

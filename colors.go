@@ -9,7 +9,7 @@ import (
 func prepareLut(lutSize int, fn func(float32) float32) []float32 {
 	lut := make([]float32, lutSize)
 	q := 1 / float32(lutSize-1)
-	for v := 0; v < lutSize; v++ {
+	for v := range lutSize {
 		u := float32(v) * q
 		lut[v] = fn(u)
 	}

@@ -210,7 +210,7 @@ func (p *rotateFilter) Draw(dst draw.Image, src image.Image, options *Options) {
 
 	parallelize(options.Parallelization, 0, h, func(start, stop int) {
 		for y := start; y < stop; y++ {
-			for x := 0; x < w; x++ {
+			for x := range w {
 
 				xf, yf := rotatePoint(float32(x)-dstxoff, float32(y)-dstyoff, asin, acos)
 				xf, yf = float32(srcb.Min.X)+xf+srcxoff, float32(srcb.Min.Y)+yf+srcyoff
@@ -242,8 +242,8 @@ func interpolateCubic(xf, yf float32, bounds image.Rectangle, pixGetter *pixelGe
 	}
 	xq, yq := xf-float32(x0), yf-float32(y0)
 
-	for i := 0; i < 4; i++ {
-		for j := 0; j < 4; j++ {
+	for i := range 4 {
+		for j := range 4 {
 			pt := image.Pt(x0+j-1, y0+i-1)
 			if pt.In(bounds) {
 				pxs[i*4+j] = pixGetter.getPixel(pt.X, pt.Y)
@@ -304,8 +304,8 @@ func interpolateLinear(xf, yf float32, bounds image.Rectangle, pixGetter *pixelG
 	}
 	xq, yq := xf-float32(x0), yf-float32(y0)
 
-	for i := 0; i < 2; i++ {
-		for j := 0; j < 2; j++ {
+	for i := range 2 {
+		for j := range 2 {
 			pt := image.Pt(x0+j, y0+i)
 			if pt.In(bounds) {
 				pxs[i*2+j] = pixGetter.getPixel(pt.X, pt.Y)

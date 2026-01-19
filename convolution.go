@@ -109,7 +109,7 @@ func (p *convolutionFilter) Draw(dst draw.Image, src image.Image, options *Optio
 		// Init temporary rows.
 		starty := start
 		rows := make([][]pixel, ksize)
-		for i := 0; i < ksize; i++ {
+		for i := range ksize {
 			rowy := starty + i - kcenter
 			if rowy < srcb.Min.Y {
 				rowy = srcb.Min.Y
@@ -171,10 +171,7 @@ func (p *convolutionFilter) Draw(dst draw.Image, src image.Image, options *Optio
 				for i := 0; i < ksize-1; i++ {
 					rows[i] = rows[i+1]
 				}
-				nextrowy := y + ksize/2 + 1
-				if nextrowy > srcb.Max.Y-1 {
-					nextrowy = srcb.Max.Y - 1
-				}
+				nextrowy := min(y+ksize/2+1, srcb.Max.Y-1)
 				pixGetter.getPixelRow(nextrowy, &tmprow)
 				rows[ksize-1] = tmprow
 			}
@@ -245,7 +242,7 @@ func convolveLine(dstBuf []pixel, srcBuf []pixel, weights []uweight) {
 	if max < 0 {
 		return
 	}
-	for dstu := 0; dstu < len(srcBuf); dstu++ {
+	for dstu := range srcBuf {
 		var r, g, b, a float32
 		for _, w := range weights {
 			k := dstu + w.u
@@ -365,7 +362,7 @@ func (p *gausssianBlurFilter) Draw(dst draw.Image, src image.Image, options *Opt
 		sum += 2 * f
 	}
 
-	for i := 0; i < len(kernel); i++ {
+	for i := range kernel {
 		kernel[i] /= sum
 	}
 

@@ -168,10 +168,7 @@ func (p *rankFilter) Draw(dst draw.Image, src image.Image, options *Options) {
 				if x < srcb.Max.X-1 {
 					copy(buf.src[0:], buf.src[ksize:])
 					buf.src = buf.src[0 : ksize*(ksize-1)]
-					kx := x + 1 + kradius
-					if kx > srcb.Max.X-1 {
-						kx = srcb.Max.X - 1
-					}
+					kx := min(x+1+kradius, srcb.Max.X-1)
 					for j := y - kradius; j <= y+kradius; j++ {
 						ky := j
 						if ky < srcb.Min.Y {
