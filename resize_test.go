@@ -33,11 +33,11 @@ func TestResize(t *testing.T) {
 		CubicResampling,
 		LanczosResampling,
 	}
-	for _, prlz := range []bool{true, false} {
+	for _, workers := range []int{5, 1} {
 		for _, z := range sz {
 			for _, f := range rfilters {
-				g := New(Resize(z.w0, z.h0, f))
-				g.SetParallelization(prlz)
+				opts := Options{Workers: workers}
+				g := NewWithOptions(opts, Resize(z.w0, z.h0, f))
 				img1 = image.NewGray(g.Bounds(img0.Bounds()))
 				g.Draw(img1, img0)
 				w2, h2 := img1.Bounds().Dx(), img1.Bounds().Dy()

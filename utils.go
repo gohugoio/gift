@@ -4,16 +4,11 @@ import (
 	"image"
 	"image/draw"
 	"math"
-	"runtime"
 	"sync"
 )
 
 // parallelize parallelizes the data processing.
-func parallelize(enabled bool, start, stop int, fn func(start, stop int)) {
-	procs := 1
-	if enabled {
-		procs = runtime.GOMAXPROCS(0)
-	}
+func parallelize(procs int, start, stop int, fn func(start, stop int)) {
 	var wg sync.WaitGroup
 	splitRange(start, stop, procs, func(pstart, pstop int) {
 		wg.Add(1)
@@ -203,7 +198,7 @@ func copyimage(dst draw.Image, src image.Image, options *Options) {
 	pixGetter := newPixelGetter(src)
 	pixSetter := newPixelSetter(dst)
 
-	parallelize(options.Parallelization, srcb.Min.Y, srcb.Max.Y, func(start, stop int) {
+	parallelize(options.Workers, srcb.Min.Y, srcb.Max.Y, func(start, stop int) {
 		for srcy := start; srcy < stop; srcy++ {
 			for srcx := srcb.Min.X; srcx < srcb.Max.X; srcx++ {
 				dstx := dstb.Min.X + srcx - srcb.Min.X
@@ -221,6 +216,7 @@ func (p *copyimageFilter) Bounds(srcBounds image.Rectangle) (dstBounds image.Rec
 	return
 }
 
-func (p *copyimageFilter) Draw(dst draw.Image, src image.Image, options *Options) {
+func (p *copyimageFilter) Draw(dst draw.Image, src image.Image, options *Options) error {
 	copyimage(dst, src, options)
+	return nil
 }

@@ -20,21 +20,14 @@ func (p *testFilter) Bounds(srcBounds image.Rectangle) (dstBounds image.Rectangl
 	return
 }
 
-func (p *testFilter) Draw(dst draw.Image, src image.Image, options *Options) {
+func (p *testFilter) Draw(dst draw.Image, src image.Image, options *Options) error {
 	dst.Set(dst.Bounds().Min.X, dst.Bounds().Min.Y, color.Gray{123})
+	return nil
 }
 
 func TestGIFT(t *testing.T) {
 	g := New()
-	if g.Parallelization() != defaultOptions.Parallelization {
-		t.Error("unexpected parallelization property")
-	}
-	g.SetParallelization(true)
-	if !g.Parallelization() {
-		t.Error("unexpected parallelization property")
-	}
-	g.SetParallelization(false)
-	if g.Parallelization() {
+	if g.options.Workers != defaultOptions.Workers {
 		t.Error("unexpected parallelization property")
 	}
 
@@ -43,30 +36,8 @@ func TestGIFT(t *testing.T) {
 		&testFilter{2},
 		&testFilter{3},
 	)
-	if len(g.Filters) != 3 {
+	if len(g.filters) != 3 {
 		t.Error("unexpected filters count")
-	}
-
-	g.Add(
-		&testFilter{4},
-		&testFilter{5},
-		&testFilter{6},
-	)
-	if len(g.Filters) != 6 {
-		t.Error("unexpected filters count")
-	}
-	b := g.Bounds(image.Rect(0, 0, 1, 2))
-	if !b.Eq(image.Rect(0, 0, 22, 44)) {
-		t.Error("unexpected gift bounds")
-	}
-
-	g.Empty()
-	if len(g.Filters) != 0 {
-		t.Error("unexpected filters count")
-	}
-	b = g.Bounds(image.Rect(0, 0, 1, 2))
-	if !b.Eq(image.Rect(0, 0, 1, 2)) {
-		t.Error("unexpected gift bounds")
 	}
 
 	g = &GIFT{}
@@ -84,17 +55,6 @@ func TestGIFT(t *testing.T) {
 		if dst.Pix[i] != src.Pix[i] {
 			t.Error("unexpected dst pix")
 		}
-	}
-
-	g.Add(&testFilter{1})
-	g.Add(&testFilter{2})
-	dst = image.NewGray(g.Bounds(src.Bounds()))
-	g.Draw(dst, src)
-	if dst.Bounds().Dx() != src.Bounds().Dx()+3 || dst.Bounds().Dy() != src.Bounds().Dy()+6 {
-		t.Error("unexpected dst bounds")
-	}
-	if dst.Pix[0] != 123 {
-		t.Error("unexpected dst pix")
 	}
 }
 
@@ -239,7 +199,9 @@ func TestDrawAt(t *testing.T) {
 		dst := image.NewGray(d.dstb)
 		dst.Pix = d.dstPix0
 
-		g.DrawAt(dst, src, d.pt, d.op)
+		if err := g.DrawAt(dst, src, d.pt, d.op); err != nil {
+			t.Errorf("test [%s] failed: unexpected error: %v", d.desc, err)
+		}
 
 		if !checkBoundsAndPix(dst.Bounds(), d.dstb, dst.Pix, d.dstPix1) {
 			t.Errorf("test [%s] failed: %#v, %#v", d.desc, dst.Bounds(), dst.Pix)
@@ -375,7 +337,9 @@ func TestDrawAt(t *testing.T) {
 		dst := image.NewNRGBA(d.dstb)
 		dst.Pix = d.dstPix0
 
-		g.DrawAt(dst, src, d.pt, d.op)
+		if err := g.DrawAt(dst, src, d.pt, d.op); err != nil {
+			t.Errorf("test [%s] failed: unexpected error: %v", d.desc, err)
+		}
 
 		if !checkBoundsAndPix(dst.Bounds(), d.dstb, dst.Pix, d.dstPix1) {
 			t.Errorf("test [%s] failed: %#v, %#v", d.desc, dst.Bounds(), dst.Pix)
@@ -620,6 +584,64 @@ func goldenEqual(img1, img2 *image.NRGBA) bool {
 		}
 	}
 	return true
+}
+
+func BenchmarkWorkers(b *testing.B) {
+	file, err := os.Open("testdata/src.jpg")
+	if err != nil {
+		b.Fatalf("failed to open test image: %v", err)
+	}
+	src, _, err := image.Decode(file)
+	if err != nil {
+		b.Fatalf("failed to decode test image: %v", err)
+	}
+
+	runBench := func(b *testing.B, workers int) {
+		options := &Options{Workers: workers}
+		g := NewWithOptions(*options, Resize(150, 0, LanczosResampling))
+		dst := image.NewNRGBA(g.Bounds(src.Bounds()))
+		b.ReportAllocs()
+		b.ResetTimer()
+		for b.Loop() {
+			g.Draw(dst, src)
+		}
+	}
+
+	runBenchPara := func(b *testing.B, workers int) {
+		b.RunParallel(func(pb *testing.PB) {
+			options := &Options{Workers: workers}
+			g := NewWithOptions(*options, Resize(150, 0, LanczosResampling))
+			dst := image.NewNRGBA(g.Bounds(src.Bounds()))
+			b.ReportAllocs()
+			for pb.Next() {
+				g.Draw(dst, src)
+			}
+		})
+	}
+
+	b.Run("workers default", func(b *testing.B) {
+		runBench(b, 0)
+	})
+
+	b.Run("workers 1", func(b *testing.B) {
+		runBench(b, 1)
+	})
+
+	b.Run("workers 10", func(b *testing.B) {
+		runBench(b, 10)
+	})
+
+	b.Run("workers default parallel", func(b *testing.B) {
+		runBenchPara(b, 0)
+	})
+
+	b.Run("workers 1 parallel", func(b *testing.B) {
+		runBenchPara(b, 1)
+	})
+
+	b.Run("workers 10 parallel", func(b *testing.B) {
+		runBenchPara(b, 10)
+	})
 }
 
 func BenchmarkFilter(b *testing.B) {

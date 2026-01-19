@@ -21,58 +21,56 @@ package gift
 import (
 	"image"
 	"image/draw"
+	"runtime"
 )
 
 // Filter is an image processing filter.
 type Filter interface {
 	// Draw applies the filter to the src image and outputs the result to the dst image.
-	Draw(dst draw.Image, src image.Image, options *Options)
+	Draw(dst draw.Image, src image.Image, options *Options) error
 	// Bounds calculates the appropriate bounds of an image after applying the filter.
 	Bounds(srcBounds image.Rectangle) (dstBounds image.Rectangle)
 }
 
 // Options is the parameters passed to image processing filters.
 type Options struct {
-	Parallelization bool
+	Workers int
 }
 
-var defaultOptions = Options{
-	Parallelization: true,
+func (o *Options) init() {
+	if o.Workers < 1 {
+		// Values from benchmarking on a MacBook M1 with 10 logical CPUs.
+		o.Workers = min(6, runtime.NumCPU())
+	}
+}
+
+var defaultOptions = Options{}
+
+func init() {
+	defaultOptions.init()
 }
 
 // GIFT is a list of image processing filters.
 type GIFT struct {
-	Filters []Filter
-	Options Options
+	filters []Filter
+	options Options
 }
 
 // New creates a new filter list and initializes it with the given slice of filters.
 func New(filters ...Filter) *GIFT {
 	return &GIFT{
-		Filters: filters,
-		Options: defaultOptions,
+		filters: filters,
+		options: defaultOptions,
 	}
 }
 
-// SetParallelization enables or disables the image processing parallelization.
-// Parallelization is enabled by default.
-func (g *GIFT) SetParallelization(isEnabled bool) {
-	g.Options.Parallelization = isEnabled
-}
-
-// Parallelization returns the current state of parallelization option.
-func (g *GIFT) Parallelization() bool {
-	return g.Options.Parallelization
-}
-
-// Add appends the given filters to the list of filters.
-func (g *GIFT) Add(filters ...Filter) {
-	g.Filters = append(g.Filters, filters...)
-}
-
-// Empty removes all the filters from the list.
-func (g *GIFT) Empty() {
-	g.Filters = []Filter{}
+// NewWithOptions creates a new filter list with the given options and initializes it with the given slice of filters.
+func NewWithOptions(options Options, filters ...Filter) *GIFT {
+	options.init()
+	return &GIFT{
+		filters: filters,
+		options: options,
+	}
 }
 
 // Bounds calculates the appropriate bounds for the result image after applying all the added filters.
@@ -87,7 +85,7 @@ func (g *GIFT) Empty() {
 //	dst := image.NewRGBA(g.Bounds(src.Bounds())) // dst bounds: (0, 0, 200, 100)
 func (g *GIFT) Bounds(srcBounds image.Rectangle) (dstBounds image.Rectangle) {
 	b := srcBounds
-	for _, f := range g.Filters {
+	for _, f := range g.filters {
 		b = f.Bounds(b)
 	}
 	dstBounds = b
@@ -95,17 +93,17 @@ func (g *GIFT) Bounds(srcBounds image.Rectangle) (dstBounds image.Rectangle) {
 }
 
 // Draw applies all the added filters to the src image and outputs the result to the dst image.
-func (g *GIFT) Draw(dst draw.Image, src image.Image) {
-	if len(g.Filters) == 0 {
-		copyimage(dst, src, &g.Options)
-		return
+func (g *GIFT) Draw(dst draw.Image, src image.Image) error {
+	if len(g.filters) == 0 {
+		copyimage(dst, src, &g.options)
+		return nil
 	}
 
-	first, last := 0, len(g.Filters)-1
+	first, last := 0, len(g.filters)-1
 	var tmpIn image.Image
 	var tmpOut draw.Image
 
-	for i, f := range g.Filters {
+	for i, f := range g.filters {
 		if i == first {
 			tmpIn = src
 		} else {
@@ -118,8 +116,11 @@ func (g *GIFT) Draw(dst draw.Image, src image.Image) {
 			tmpOut = createTempImage(f.Bounds(tmpIn.Bounds()))
 		}
 
-		f.Draw(tmpOut, tmpIn, &g.Options)
+		if err := f.Draw(tmpOut, tmpIn, &g.options); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 // Operator is an image composition operator.
@@ -133,18 +134,20 @@ const (
 
 // DrawAt applies all the added filters to the src image and outputs the result to the dst image
 // at the specified position pt using the specified composition operator op.
-func (g *GIFT) DrawAt(dst draw.Image, src image.Image, pt image.Point, op Operator) {
+func (g *GIFT) DrawAt(dst draw.Image, src image.Image, pt image.Point, op Operator) error {
 	switch op {
 	case OverOperator:
 		tb := g.Bounds(src.Bounds())
 		tb = tb.Sub(tb.Min).Add(pt)
 		tmp := createTempImage(tb)
-		g.Draw(tmp, src)
+		if err := g.Draw(tmp, src); err != nil {
+			return err
+		}
 		pixGetterDst := newPixelGetter(dst)
 		pixGetterTmp := newPixelGetter(tmp)
 		pixSetterDst := newPixelSetter(dst)
 		ib := tb.Intersect(dst.Bounds())
-		parallelize(g.Options.Parallelization, ib.Min.Y, ib.Max.Y, func(start, stop int) {
+		parallelize(g.options.Workers, ib.Min.Y, ib.Max.Y, func(start, stop int) {
 			for y := start; y < stop; y++ {
 				for x := ib.Min.X; x < ib.Max.X; x++ {
 					px0 := pixGetterDst.getPixel(x, y)
@@ -165,21 +168,21 @@ func (g *GIFT) DrawAt(dst draw.Image, src image.Image, pt image.Point, op Operat
 
 	default:
 		if pt.Eq(dst.Bounds().Min) {
-			g.Draw(dst, src)
-			return
+			return g.Draw(dst, src)
 		}
 		if subimg, ok := getSubImage(dst, pt); ok {
-			g.Draw(subimg, src)
-			return
+			return g.Draw(subimg, src)
 		}
 		tb := g.Bounds(src.Bounds())
 		tb = tb.Sub(tb.Min).Add(pt)
 		tmp := createTempImage(tb)
-		g.Draw(tmp, src)
+		if err := g.Draw(tmp, src); err != nil {
+			return err
+		}
 		pixGetter := newPixelGetter(tmp)
 		pixSetter := newPixelSetter(dst)
 		ib := tb.Intersect(dst.Bounds())
-		parallelize(g.Options.Parallelization, ib.Min.Y, ib.Max.Y, func(start, stop int) {
+		parallelize(g.options.Workers, ib.Min.Y, ib.Max.Y, func(start, stop int) {
 			for y := start; y < stop; y++ {
 				for x := ib.Min.X; x < ib.Max.X; x++ {
 					pixSetter.setPixel(x, y, pixGetter.getPixel(x, y))
@@ -187,6 +190,7 @@ func (g *GIFT) DrawAt(dst draw.Image, src image.Image, pt image.Point, op Operat
 			}
 		})
 	}
+	return nil
 }
 
 func getSubImage(img draw.Image, pt image.Point) (draw.Image, bool) {

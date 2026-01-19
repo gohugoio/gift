@@ -24,7 +24,7 @@ func (p *rankFilter) Bounds(srcBounds image.Rectangle) (dstBounds image.Rectangl
 	return
 }
 
-func (p *rankFilter) Draw(dst draw.Image, src image.Image, options *Options) {
+func (p *rankFilter) Draw(dst draw.Image, src image.Image, options *Options) error {
 	if options == nil {
 		options = &defaultOptions
 	}
@@ -33,7 +33,7 @@ func (p *rankFilter) Draw(dst draw.Image, src image.Image, options *Options) {
 	dstb := dst.Bounds()
 
 	if srcb.Dx() <= 0 || srcb.Dy() <= 0 {
-		return
+		return nil
 	}
 
 	ksize := p.ksize
@@ -43,7 +43,7 @@ func (p *rankFilter) Draw(dst draw.Image, src image.Image, options *Options) {
 
 	if ksize <= 1 {
 		copyimage(dst, src, options)
-		return
+		return nil
 	}
 	kradius := ksize / 2
 
@@ -57,7 +57,7 @@ func (p *rankFilter) Draw(dst draw.Image, src image.Image, options *Options) {
 	pixGetter := newPixelGetter(src)
 	pixSetter := newPixelSetter(dst)
 
-	parallelize(options.Parallelization, srcb.Min.Y, srcb.Max.Y, func(start, stop int) {
+	parallelize(options.Workers, srcb.Min.Y, srcb.Max.Y, func(start, stop int) {
 		buf := getPixelBuf(0, 0)
 		defer putPixelBuf(buf)
 
@@ -182,6 +182,8 @@ func (p *rankFilter) Draw(dst draw.Image, src image.Image, options *Options) {
 			}
 		}
 	})
+
+	return nil
 }
 
 // Median creates a median image filter.

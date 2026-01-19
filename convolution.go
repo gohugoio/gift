@@ -82,7 +82,7 @@ func (p *convolutionFilter) Bounds(srcBounds image.Rectangle) (dstBounds image.R
 	return
 }
 
-func (p *convolutionFilter) Draw(dst draw.Image, src image.Image, options *Options) {
+func (p *convolutionFilter) Draw(dst draw.Image, src image.Image, options *Options) error {
 	if options == nil {
 		options = &defaultOptions
 	}
@@ -91,7 +91,7 @@ func (p *convolutionFilter) Draw(dst draw.Image, src image.Image, options *Optio
 	dstb := dst.Bounds()
 
 	if srcb.Dx() <= 0 || srcb.Dy() <= 0 {
-		return
+		return nil
 	}
 
 	ksize, weights := prepareConvolutionWeights(p.kernel, p.normalize)
@@ -99,13 +99,13 @@ func (p *convolutionFilter) Draw(dst draw.Image, src image.Image, options *Optio
 
 	if ksize < 1 {
 		copyimage(dst, src, options)
-		return
+		return nil
 	}
 
 	pixGetter := newPixelGetter(src)
 	pixSetter := newPixelSetter(dst)
 
-	parallelize(options.Parallelization, srcb.Min.Y, srcb.Max.Y, func(start, stop int) {
+	parallelize(options.Workers, srcb.Min.Y, srcb.Max.Y, func(start, stop int) {
 		// Init temporary rows.
 		starty := start
 		rows := make([][]pixel, ksize)
@@ -177,6 +177,8 @@ func (p *convolutionFilter) Draw(dst draw.Image, src image.Image, options *Optio
 			}
 		}
 	})
+
+	return nil
 }
 
 // Convolution creates a filter that applies a square convolution kernel to an image.
@@ -281,7 +283,7 @@ func convolve1dv(dst draw.Image, src image.Image, kernel []float32, options *Opt
 	_, weights := prepareConvolutionWeights1d(kernel)
 	pixGetter := newPixelGetter(src)
 	pixSetter := newPixelSetter(dst)
-	parallelize(options.Parallelization, srcb.Min.X, srcb.Max.X, func(start, stop int) {
+	parallelize(options.Workers, srcb.Min.X, srcb.Max.X, func(start, stop int) {
 		buf := getPixelBuf(srcb.Dy(), srcb.Dy())
 		defer putPixelBuf(buf)
 
@@ -307,7 +309,7 @@ func convolve1dh(dst draw.Image, src image.Image, kernel []float32, options *Opt
 	_, weights := prepareConvolutionWeights1d(kernel)
 	pixGetter := newPixelGetter(src)
 	pixSetter := newPixelSetter(dst)
-	parallelize(options.Parallelization, srcb.Min.Y, srcb.Max.Y, func(start, stop int) {
+	parallelize(options.Workers, srcb.Min.Y, srcb.Max.Y, func(start, stop int) {
 		buf := getPixelBuf(srcb.Dx(), srcb.Dx())
 		defer putPixelBuf(buf)
 
@@ -332,19 +334,19 @@ func (p *gausssianBlurFilter) Bounds(srcBounds image.Rectangle) (dstBounds image
 	return
 }
 
-func (p *gausssianBlurFilter) Draw(dst draw.Image, src image.Image, options *Options) {
+func (p *gausssianBlurFilter) Draw(dst draw.Image, src image.Image, options *Options) error {
 	if options == nil {
 		options = &defaultOptions
 	}
 
 	srcb := src.Bounds()
 	if srcb.Dx() <= 0 || srcb.Dy() <= 0 {
-		return
+		return nil
 	}
 
 	if p.sigma <= 0 {
 		copyimage(dst, src, options)
-		return
+		return nil
 	}
 
 	radius := int(math.Ceil(float64(p.sigma * 3)))
@@ -369,6 +371,8 @@ func (p *gausssianBlurFilter) Draw(dst draw.Image, src image.Image, options *Opt
 	tmp := createTempImage(srcb)
 	convolve1dh(tmp, src, kernel, options)
 	convolve1dv(dst, tmp, kernel, options)
+
+	return nil
 }
 
 // GaussianBlur creates a filter that applies a gaussian blur to an image.
@@ -407,7 +411,7 @@ func unsharp(orig, blurred, amount, threshold float32) float32 {
 	return orig
 }
 
-func (p *unsharpMaskFilter) Draw(dst draw.Image, src image.Image, options *Options) {
+func (p *unsharpMaskFilter) Draw(dst draw.Image, src image.Image, options *Options) error {
 	if options == nil {
 		options = &defaultOptions
 	}
@@ -416,7 +420,7 @@ func (p *unsharpMaskFilter) Draw(dst draw.Image, src image.Image, options *Optio
 	dstb := dst.Bounds()
 
 	if srcb.Dx() <= 0 || srcb.Dy() <= 0 {
-		return
+		return nil
 	}
 
 	blurred := createTempImage(srcb)
@@ -427,7 +431,7 @@ func (p *unsharpMaskFilter) Draw(dst draw.Image, src image.Image, options *Optio
 	pixGetterBlur := newPixelGetter(blurred)
 	pixelSetter := newPixelSetter(dst)
 
-	parallelize(options.Parallelization, srcb.Min.Y, srcb.Max.Y, func(start, stop int) {
+	parallelize(options.Workers, srcb.Min.Y, srcb.Max.Y, func(start, stop int) {
 		for y := start; y < stop; y++ {
 			for x := srcb.Min.X; x < srcb.Max.X; x++ {
 				pxOrig := pixGetterOrig.getPixel(x, y)
@@ -442,6 +446,8 @@ func (p *unsharpMaskFilter) Draw(dst draw.Image, src image.Image, options *Optio
 			}
 		}
 	})
+
+	return nil
 }
 
 // UnsharpMask creates a filter that sharpens an image.
@@ -475,14 +481,14 @@ func (p *meanFilter) Bounds(srcBounds image.Rectangle) (dstBounds image.Rectangl
 	return
 }
 
-func (p *meanFilter) Draw(dst draw.Image, src image.Image, options *Options) {
+func (p *meanFilter) Draw(dst draw.Image, src image.Image, options *Options) error {
 	if options == nil {
 		options = &defaultOptions
 	}
 
 	srcb := src.Bounds()
 	if srcb.Dx() <= 0 || srcb.Dy() <= 0 {
-		return
+		return nil
 	}
 
 	ksize := p.ksize
@@ -492,7 +498,7 @@ func (p *meanFilter) Draw(dst draw.Image, src image.Image, options *Options) {
 
 	if ksize <= 1 {
 		copyimage(dst, src, options)
-		return
+		return nil
 	}
 
 	if p.disk {
@@ -507,6 +513,8 @@ func (p *meanFilter) Draw(dst draw.Image, src image.Image, options *Options) {
 		f := Convolution(kernel, true, true, false, 0)
 		f.Draw(dst, src, options)
 	}
+
+	return nil
 }
 
 // Mean creates a local mean image filter.
@@ -529,7 +537,7 @@ func (p *hvConvolutionFilter) Bounds(srcBounds image.Rectangle) (dstBounds image
 	return
 }
 
-func (p *hvConvolutionFilter) Draw(dst draw.Image, src image.Image, options *Options) {
+func (p *hvConvolutionFilter) Draw(dst draw.Image, src image.Image, options *Options) error {
 	if options == nil {
 		options = &defaultOptions
 	}
@@ -538,7 +546,7 @@ func (p *hvConvolutionFilter) Draw(dst draw.Image, src image.Image, options *Opt
 	dstb := dst.Bounds()
 
 	if srcb.Dx() <= 0 || srcb.Dy() <= 0 {
-		return
+		return nil
 	}
 
 	tmph := createTempImage(srcb)
@@ -551,7 +559,7 @@ func (p *hvConvolutionFilter) Draw(dst draw.Image, src image.Image, options *Opt
 
 	pixSetter := newPixelSetter(dst)
 
-	parallelize(options.Parallelization, srcb.Min.Y, srcb.Max.Y, func(start, stop int) {
+	parallelize(options.Workers, srcb.Min.Y, srcb.Max.Y, func(start, stop int) {
 		for y := start; y < stop; y++ {
 			for x := srcb.Min.X; x < srcb.Max.X; x++ {
 				pxh := pixGetterH.getPixel(x, y)
@@ -563,6 +571,8 @@ func (p *hvConvolutionFilter) Draw(dst draw.Image, src image.Image, options *Opt
 			}
 		}
 	})
+
+	return nil
 }
 
 // Sobel creates a filter that applies a sobel operator to an image.
