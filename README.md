@@ -1,9 +1,8 @@
 # GO IMAGE FILTERING TOOLKIT (GIFT)
-
-[![GoDoc](https://godoc.org/github.com/disintegration/gift?status.svg)](https://godoc.org/github.com/disintegration/gift)
-[![Build Status](https://travis-ci.org/disintegration/gift.svg?branch=master)](https://travis-ci.org/disintegration/gift)
-[![Coverage Status](https://coveralls.io/repos/github/disintegration/gift/badge.svg?branch=master)](https://coveralls.io/github/disintegration/gift?branch=master)
-[![Go Report Card](https://goreportcard.com/badge/github.com/disintegration/gift)](https://goreportcard.com/report/github.com/disintegration/gift)
+[![GoDoc](https://godoc.org/github.com/gohugoio/gift?status.svg)](https://godoc.org/github.com/gohugoio/gift)
+[![Tests on Linux, MacOS and Windows](https://github.com/gohugoio/gift/workflows/Test/badge.svg)](https://github.com/gohugoio/gift/actions?query=workflow%3ATest)
+[![Go Report Card](https://goreportcard.com/badge/github.com/gohugoio/gift)](https://goreportcard.com/report/github.com/gohugoio/gift)
+[![Go Report Card](https://goreportcard.com/badge/github.com/gohugoio/gift)](https://goreportcard.com/report/github.com/gohugoio/gift)
 
 
 *Package gift provides a set of useful image processing filters.*
@@ -13,12 +12,12 @@ Pure Go. No external dependencies outside of the Go standard library.
 
 ### INSTALLATION / UPDATING
 
-    go get -u github.com/disintegration/gift
+    go get -u github.com/gohugoio/gift
 
 
 ### DOCUMENTATION
 
-http://godoc.org/github.com/disintegration/gift
+http://godoc.org/github.com/gohugoio/gift
 
 
 ### QUICK START
@@ -168,7 +167,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/disintegration/gift"
+	"github.com/gohugoio/gift"
 )
 
 func main() {
