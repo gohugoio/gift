@@ -203,9 +203,15 @@ func TestConvolution(t *testing.T) {
 		klen, size int
 	}{
 		{0, 0},
-		{1, 1}, {3, 1}, {8, 1},
-		{9, 3}, {16, 3}, {24, 3},
-		{25, 5}, {40, 5}, {48, 5},
+		{1, 1},
+		{3, 1},
+		{8, 1},
+		{9, 3},
+		{16, 3},
+		{24, 3},
+		{25, 5},
+		{40, 5},
+		{48, 5},
 	}
 
 	for _, d := range testKernelSizes {
@@ -520,7 +526,6 @@ func TestSobel(t *testing.T) {
 		srcb, dstb     image.Rectangle
 		srcPix, dstPix []uint8
 	}{
-
 		{
 			"sobel 0x0",
 			image.Rect(0, 0, 0, 0),

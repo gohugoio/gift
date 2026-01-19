@@ -276,7 +276,6 @@ func (p *resizeFilter) Draw(dst draw.Image, src image.Image, options *Options) {
 //	)
 //	dst := image.NewRGBA(g.Bounds(src.Bounds()))
 //	g.Draw(dst, src)
-//
 func Resize(width, height int, resampling Resampling) Filter {
 	return &resizeFilter{
 		width:      width,

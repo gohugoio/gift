@@ -381,7 +381,6 @@ func TestDrawAt(t *testing.T) {
 			t.Errorf("test [%s] failed: %#v, %#v", d.desc, dst.Bounds(), dst.Pix)
 		}
 	}
-
 }
 
 type fakeDrawImage struct {
@@ -448,7 +447,6 @@ func TestSubImage(t *testing.T) {
 			}
 		}
 	}
-
 }
 
 func TestDraw(t *testing.T) {

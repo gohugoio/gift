@@ -128,7 +128,6 @@ func TestColorspaceLinearToSRGB(t *testing.T) {
 			}
 		}
 	}
-
 }
 
 func TestAdjustGamma(t *testing.T) {
@@ -512,7 +511,6 @@ func TestGrayscale(t *testing.T) {
 		srcb, dstb     image.Rectangle
 		srcPix, dstPix []uint8
 	}{
-
 		{
 			"grayscale 0x0",
 			image.Rect(0, 0, 0, 0),
@@ -558,7 +556,6 @@ func TestSepia(t *testing.T) {
 		srcb, dstb     image.Rectangle
 		srcPix, dstPix []uint8
 	}{
-
 		{
 			"sepia 100 0x0",
 			100,
@@ -639,7 +636,6 @@ func TestNormalizeHue(t *testing.T) {
 			t.Errorf("normalizeHue(%#v) failed: %#v expected: %#v", d.h0, h, d.h1)
 		}
 	}
-
 }
 
 func TestHue(t *testing.T) {
@@ -649,7 +645,6 @@ func TestHue(t *testing.T) {
 		srcb, dstb     image.Rectangle
 		srcPix, dstPix []uint8
 	}{
-
 		{
 			"hue 0 0x0",
 			0,
@@ -789,7 +784,6 @@ func TestSaturation(t *testing.T) {
 		srcb, dstb     image.Rectangle
 		srcPix, dstPix []uint8
 	}{
-
 		{
 			"saturation 0 0x0",
 			0,
@@ -875,7 +869,6 @@ func TestColorize(t *testing.T) {
 		srcb, dstb     image.Rectangle
 		srcPix, dstPix []uint8
 	}{
-
 		{
 			"colorize 0, 0, 0, 0x0",
 			0, 0, 0,
@@ -944,7 +937,6 @@ func TestColorBalance(t *testing.T) {
 		srcb, dstb     image.Rectangle
 		srcPix, dstPix []uint8
 	}{
-
 		{
 			"color balance 0, 0, 0, 0x0",
 			0, 0, 0,
@@ -1092,7 +1084,6 @@ func TestColorFunc(t *testing.T) {
 		srcb, dstb     image.Rectangle
 		srcPix, dstPix []uint8
 	}{
-
 		{
 			"color func 0x0",
 			func(r0, g0, b0, a0 float32) (r, g, b, a float32) {

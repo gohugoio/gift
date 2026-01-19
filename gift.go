@@ -15,7 +15,6 @@ Basic usage:
 
 	// 3. Use the Draw func to apply the filters to src and store the result in dst.
 	g.Draw(dst, src)
-
 */
 package gift
 
@@ -81,13 +80,11 @@ func (g *GIFT) Empty() {
 //
 // Example:
 //
-// 	src := image.NewRGBA(image.Rect(0, 0, 100, 200))
+//	src := image.NewRGBA(image.Rect(0, 0, 100, 200))
 //	g := gift.New(gift.Rotate90())
 //
-// 	// calculate image bounds after applying rotation and create a new image of that size.
-// 	dst := image.NewRGBA(g.Bounds(src.Bounds())) // dst bounds: (0, 0, 200, 100)
-//
-//
+//	// calculate image bounds after applying rotation and create a new image of that size.
+//	dst := image.NewRGBA(g.Bounds(src.Bounds())) // dst bounds: (0, 0, 200, 100)
 func (g *GIFT) Bounds(srcBounds image.Rectangle) (dstBounds image.Rectangle) {
 	b := srcBounds
 	for _, f := range g.Filters {

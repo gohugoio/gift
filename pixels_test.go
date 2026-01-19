@@ -72,7 +72,6 @@ func comparePixels(px1, px2 pixel, dif float64) bool {
 		return false
 	}
 	return true
-
 }
 
 func compareColorsNRGBA(c1, c2 color.NRGBA, dif int) bool {
@@ -539,7 +538,6 @@ func TestSetPixel(t *testing.T) {
 			}
 		}
 	}
-
 }
 
 func TestSetPixelRow(t *testing.T) {

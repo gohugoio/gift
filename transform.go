@@ -358,7 +358,6 @@ func interpolateNearest(xf, yf float32, bounds image.Rectangle, pixGetter *pixel
 //	)
 //	dst := image.NewRGBA(g.Bounds(src.Bounds()))
 //	g.Draw(dst, src)
-//
 func Rotate(angle float32, backgroundColor color.Color, interpolation Interpolation) Filter {
 	return &rotateFilter{
 		angle:         angle,
@@ -406,7 +405,6 @@ func (p *cropFilter) Draw(dst draw.Image, src image.Image, options *Options) {
 //	)
 //	dst := image.NewRGBA(g.Bounds(src.Bounds()))
 //	g.Draw(dst, src)
-//
 func Crop(rect image.Rectangle) Filter {
 	return &cropFilter{
 		rect: rect,

@@ -632,5 +632,4 @@ func TestRotate(t *testing.T) {
 			t.Errorf("test [%s] failed: %#v, %#v", d.desc, dst.Bounds(), dst.Pix)
 		}
 	}
-
 }

@@ -214,9 +214,11 @@ type customImage struct{}
 func (customImage) ColorModel() color.Model {
 	return color.GrayModel
 }
+
 func (customImage) Bounds() image.Rectangle {
 	return image.Rectangle{}
 }
+
 func (customImage) At(x, y int) color.Color {
 	return color.Gray{}
 }
