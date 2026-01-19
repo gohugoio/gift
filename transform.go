@@ -31,7 +31,7 @@ func (p *transformFilter) Bounds(srcBounds image.Rectangle) (dstBounds image.Rec
 	return
 }
 
-func (p *transformFilter) Draw(dst draw.Image, src image.Image, options *Options) {
+func (p *transformFilter) Draw(dst draw.Image, src image.Image, options *Options) error {
 	if options == nil {
 		options = &defaultOptions
 	}
@@ -42,7 +42,7 @@ func (p *transformFilter) Draw(dst draw.Image, src image.Image, options *Options
 	pixGetter := newPixelGetter(src)
 	pixSetter := newPixelSetter(dst)
 
-	parallelize(options.Parallelization, srcb.Min.Y, srcb.Max.Y, func(start, stop int) {
+	parallelize(options.Workers, srcb.Min.Y, srcb.Max.Y, func(start, stop int) {
 		for srcy := start; srcy < stop; srcy++ {
 			for srcx := srcb.Min.X; srcx < srcb.Max.X; srcx++ {
 				var dstx, dsty int
@@ -73,6 +73,7 @@ func (p *transformFilter) Draw(dst draw.Image, src image.Image, options *Options
 			}
 		}
 	})
+	return nil
 }
 
 // Rotate90 creates a filter that rotates an image 90 degrees counter-clockwise.
@@ -184,7 +185,7 @@ func (p *rotateFilter) Bounds(srcBounds image.Rectangle) (dstBounds image.Rectan
 	return
 }
 
-func (p *rotateFilter) Draw(dst draw.Image, src image.Image, options *Options) {
+func (p *rotateFilter) Draw(dst draw.Image, src image.Image, options *Options) error {
 	if options == nil {
 		options = &defaultOptions
 	}
@@ -194,7 +195,7 @@ func (p *rotateFilter) Draw(dst draw.Image, src image.Image, options *Options) {
 
 	w, h := calcRotatedSize(srcb.Dx(), srcb.Dy(), p.angle)
 	if w <= 0 || h <= 0 {
-		return
+		return nil
 	}
 
 	srcxoff := float32(srcb.Dx())/2 - 0.5
@@ -208,7 +209,7 @@ func (p *rotateFilter) Draw(dst draw.Image, src image.Image, options *Options) {
 	pixGetter := newPixelGetter(src)
 	pixSetter := newPixelSetter(dst)
 
-	parallelize(options.Parallelization, 0, h, func(start, stop int) {
+	parallelize(options.Workers, 0, h, func(start, stop int) {
 		for y := start; y < stop; y++ {
 			for x := range w {
 
@@ -229,6 +230,7 @@ func (p *rotateFilter) Draw(dst draw.Image, src image.Image, options *Options) {
 			}
 		}
 	})
+	return nil
 }
 
 func interpolateCubic(xf, yf float32, bounds image.Rectangle, pixGetter *pixelGetter, bgpx pixel) pixel {
@@ -375,7 +377,7 @@ func (p *cropFilter) Bounds(srcBounds image.Rectangle) (dstBounds image.Rectangl
 	return b.Sub(b.Min)
 }
 
-func (p *cropFilter) Draw(dst draw.Image, src image.Image, options *Options) {
+func (p *cropFilter) Draw(dst draw.Image, src image.Image, options *Options) error {
 	if options == nil {
 		options = &defaultOptions
 	}
@@ -385,7 +387,7 @@ func (p *cropFilter) Draw(dst draw.Image, src image.Image, options *Options) {
 	pixGetter := newPixelGetter(src)
 	pixSetter := newPixelSetter(dst)
 
-	parallelize(options.Parallelization, srcb.Min.Y, srcb.Max.Y, func(start, stop int) {
+	parallelize(options.Workers, srcb.Min.Y, srcb.Max.Y, func(start, stop int) {
 		for srcy := start; srcy < stop; srcy++ {
 			for srcx := srcb.Min.X; srcx < srcb.Max.X; srcx++ {
 				dstx := dstb.Min.X + srcx - srcb.Min.X
@@ -394,6 +396,7 @@ func (p *cropFilter) Draw(dst draw.Image, src image.Image, options *Options) {
 			}
 		}
 	})
+	return nil
 }
 
 // Crop creates a filter that crops the specified rectangular region from an image.
@@ -476,14 +479,15 @@ func (p *cropToSizeFilter) Bounds(srcBounds image.Rectangle) (dstBounds image.Re
 	return b.Sub(b.Min)
 }
 
-func (p *cropToSizeFilter) Draw(dst draw.Image, src image.Image, options *Options) {
+func (p *cropToSizeFilter) Draw(dst draw.Image, src image.Image, options *Options) error {
 	if p.w <= 0 || p.h <= 0 {
-		return
+		return nil
 	}
 	pt := anchorPt(src.Bounds(), p.w, p.h, p.anchor)
 	r := image.Rect(0, 0, p.w, p.h).Add(pt)
 	b := src.Bounds().Intersect(r)
 	Crop(b).Draw(dst, src, options)
+	return nil
 }
 
 // CropToSize creates a filter that crops an image to the specified size using the specified anchor point.

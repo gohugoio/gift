@@ -14,7 +14,7 @@ func (p *pixelateFilter) Bounds(srcBounds image.Rectangle) (dstBounds image.Rect
 	return
 }
 
-func (p *pixelateFilter) Draw(dst draw.Image, src image.Image, options *Options) {
+func (p *pixelateFilter) Draw(dst draw.Image, src image.Image, options *Options) error {
 	if options == nil {
 		options = &defaultOptions
 	}
@@ -22,7 +22,7 @@ func (p *pixelateFilter) Draw(dst draw.Image, src image.Image, options *Options)
 	blockSize := p.size
 	if blockSize <= 1 {
 		copyimage(dst, src, options)
-		return
+		return nil
 	}
 
 	srcb := src.Bounds()
@@ -40,7 +40,7 @@ func (p *pixelateFilter) Draw(dst draw.Image, src image.Image, options *Options)
 	pixGetter := newPixelGetter(src)
 	pixSetter := newPixelSetter(dst)
 
-	parallelize(options.Parallelization, 0, numBlocksY, func(start, stop int) {
+	parallelize(options.Workers, 0, numBlocksY, func(start, stop int) {
 		for by := start; by < stop; by++ {
 			for bx := 0; bx < numBlocksX; bx++ {
 				// Calculate the block bounds.
@@ -77,6 +77,8 @@ func (p *pixelateFilter) Draw(dst draw.Image, src image.Image, options *Options)
 			}
 		}
 	})
+
+	return nil
 }
 
 // Pixelate creates a filter that applies a pixelation effect to an image.

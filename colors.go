@@ -31,7 +31,7 @@ func (p *colorchanFilter) Bounds(srcBounds image.Rectangle) (dstBounds image.Rec
 	return
 }
 
-func (p *colorchanFilter) Draw(dst draw.Image, src image.Image, options *Options) {
+func (p *colorchanFilter) Draw(dst draw.Image, src image.Image, options *Options) error {
 	if options == nil {
 		options = &defaultOptions
 	}
@@ -62,7 +62,7 @@ func (p *colorchanFilter) Draw(dst draw.Image, src image.Image, options *Options
 		}
 	}
 
-	parallelize(options.Parallelization, srcb.Min.Y, srcb.Max.Y, func(start, stop int) {
+	parallelize(options.Workers, srcb.Min.Y, srcb.Max.Y, func(start, stop int) {
 		for y := start; y < stop; y++ {
 			for x := srcb.Min.X; x < srcb.Max.X; x++ {
 				px := pixGetter.getPixel(x, y)
@@ -79,6 +79,8 @@ func (p *colorchanFilter) Draw(dst draw.Image, src image.Image, options *Options
 			}
 		}
 	})
+
+	return nil
 }
 
 // Invert creates a filter that negates the colors of an image.
@@ -224,7 +226,7 @@ func (p *colorFilter) Bounds(srcBounds image.Rectangle) (dstBounds image.Rectang
 	return
 }
 
-func (p *colorFilter) Draw(dst draw.Image, src image.Image, options *Options) {
+func (p *colorFilter) Draw(dst draw.Image, src image.Image, options *Options) error {
 	if options == nil {
 		options = &defaultOptions
 	}
@@ -234,7 +236,7 @@ func (p *colorFilter) Draw(dst draw.Image, src image.Image, options *Options) {
 	pixGetter := newPixelGetter(src)
 	pixSetter := newPixelSetter(dst)
 
-	parallelize(options.Parallelization, srcb.Min.Y, srcb.Max.Y, func(start, stop int) {
+	parallelize(options.Workers, srcb.Min.Y, srcb.Max.Y, func(start, stop int) {
 		for y := start; y < stop; y++ {
 			for x := srcb.Min.X; x < srcb.Max.X; x++ {
 				px := pixGetter.getPixel(x, y)
@@ -242,6 +244,8 @@ func (p *colorFilter) Draw(dst draw.Image, src image.Image, options *Options) {
 			}
 		}
 	})
+
+	return nil
 }
 
 // Grayscale creates a filter that produces a grayscale version of an image.

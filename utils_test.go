@@ -4,12 +4,11 @@ import (
 	"bytes"
 	"image"
 	"image/color"
-	"runtime"
 	"testing"
 )
 
 func TestParallelize(t *testing.T) {
-	for _, e := range []bool{true, false} {
+	for _, e := range []int{5, 1} {
 		for _, n := range []int{0, 1, 5, 10, 50, 100, 500, 1000, 5000} {
 			for _, p := range []int{1, 2, 4, 8, 16, 32, 64, 128} {
 				if !testParallelizeN(e, n, p) {
@@ -20,10 +19,9 @@ func TestParallelize(t *testing.T) {
 	}
 }
 
-func testParallelizeN(enabled bool, n, procs int) bool {
-	defer runtime.GOMAXPROCS(runtime.GOMAXPROCS(procs))
+func testParallelizeN(workers int, n, procs int) bool {
 	data := make([]int, n)
-	parallelize(enabled, 0, n, func(start, stop int) {
+	parallelize(workers, 0, n, func(start, stop int) {
 		for i := start; i < stop; i++ {
 			data[i]++
 		}

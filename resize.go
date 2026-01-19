@@ -140,7 +140,7 @@ func resizeHorizontal(dst draw.Image, src image.Image, w int, resampling Resampl
 	pixGetter := newPixelGetter(src)
 	pixSetter := newPixelSetter(dst)
 
-	parallelize(options.Parallelization, srcb.Min.Y, srcb.Max.Y, func(start, stop int) {
+	parallelize(options.Workers, srcb.Min.Y, srcb.Max.Y, func(start, stop int) {
 		buf := getPixelBuf(srcb.Dx(), w)
 		defer putPixelBuf(buf)
 
@@ -161,7 +161,7 @@ func resizeVertical(dst draw.Image, src image.Image, h int, resampling Resamplin
 	pixGetter := newPixelGetter(src)
 	pixSetter := newPixelSetter(dst)
 
-	parallelize(options.Parallelization, srcb.Min.X, srcb.Max.X, func(start, stop int) {
+	parallelize(options.Workers, srcb.Min.X, srcb.Max.X, func(start, stop int) {
 		buf := getPixelBuf(srcb.Dy(), h)
 		defer putPixelBuf(buf)
 
@@ -182,7 +182,7 @@ func resizeNearest(dst draw.Image, src image.Image, w, h int, options *Options) 
 	pixGetter := newPixelGetter(src)
 	pixSetter := newPixelSetter(dst)
 
-	parallelize(options.Parallelization, dstb.Min.Y, dstb.Min.Y+h, func(start, stop int) {
+	parallelize(options.Workers, dstb.Min.Y, dstb.Min.Y+h, func(start, stop int) {
 		for dsty := start; dsty < stop; dsty++ {
 			for dstx := dstb.Min.X; dstx < dstb.Min.X+w; dstx++ {
 				fx := math.Floor((float64(dstx-dstb.Min.X) + 0.5) * dx)
@@ -223,7 +223,7 @@ func (p *resizeFilter) Bounds(srcBounds image.Rectangle) (dstBounds image.Rectan
 	return
 }
 
-func (p *resizeFilter) Draw(dst draw.Image, src image.Image, options *Options) {
+func (p *resizeFilter) Draw(dst draw.Image, src image.Image, options *Options) error {
 	if options == nil {
 		options = &defaultOptions
 	}
@@ -232,32 +232,34 @@ func (p *resizeFilter) Draw(dst draw.Image, src image.Image, options *Options) {
 	w, h := b.Dx(), b.Dy()
 
 	if w <= 0 || h <= 0 {
-		return
+		return nil
 	}
 
 	if src.Bounds().Dx() == w && src.Bounds().Dy() == h {
 		copyimage(dst, src, options)
-		return
+		return nil
 	}
 
 	if p.resampling.Support() <= 0 {
 		resizeNearest(dst, src, w, h, options)
-		return
+		return nil
 	}
 
 	if src.Bounds().Dx() == w {
 		resizeVertical(dst, src, h, p.resampling, options)
-		return
+		return nil
 	}
 
 	if src.Bounds().Dy() == h {
 		resizeHorizontal(dst, src, w, p.resampling, options)
-		return
+		return nil
 	}
 
 	tmp := createTempImage(image.Rect(0, 0, w, src.Bounds().Dy()))
 	resizeHorizontal(tmp, src, w, p.resampling, options)
 	resizeVertical(dst, tmp, h, p.resampling, options)
+
+	return nil
 }
 
 // Resize creates a filter that resizes an image to the specified width and height using the specified resampling.
@@ -313,9 +315,10 @@ func (p *resizeToFitFilter) Bounds(srcBounds image.Rectangle) image.Rectangle {
 	return image.Rect(0, 0, dstw, dsth)
 }
 
-func (p *resizeToFitFilter) Draw(dst draw.Image, src image.Image, options *Options) {
+func (p *resizeToFitFilter) Draw(dst draw.Image, src image.Image, options *Options) error {
 	b := p.Bounds(src.Bounds())
 	Resize(b.Dx(), b.Dy(), p.resampling).Draw(dst, src, options)
+	return nil
 }
 
 // ResizeToFit creates a filter that resizes an image to fit within the specified dimensions while preserving the aspect ratio.
@@ -346,12 +349,12 @@ func (p *resizeToFillFilter) Bounds(srcBounds image.Rectangle) image.Rectangle {
 	return image.Rect(0, 0, w, h)
 }
 
-func (p *resizeToFillFilter) Draw(dst draw.Image, src image.Image, options *Options) {
+func (p *resizeToFillFilter) Draw(dst draw.Image, src image.Image, options *Options) error {
 	b := p.Bounds(src.Bounds())
 	w, h := b.Dx(), b.Dy()
 
 	if w <= 0 || h <= 0 {
-		return
+		return nil
 	}
 
 	srcw, srch := src.Bounds().Dx(), src.Bounds().Dy()
@@ -371,6 +374,7 @@ func (p *resizeToFillFilter) Draw(dst draw.Image, src image.Image, options *Opti
 	tmp := createTempImage(image.Rect(0, 0, tmpw, tmph))
 	Resize(tmpw, tmph, p.resampling).Draw(tmp, src, options)
 	CropToSize(w, h, p.anchor).Draw(dst, tmp, options)
+	return nil
 }
 
 // ResizeToFill creates a filter that resizes an image to the smallest possible size that will cover the specified dimensions,
