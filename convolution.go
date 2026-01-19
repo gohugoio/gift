@@ -205,7 +205,6 @@ func (p *convolutionFilter) Draw(dst draw.Image, src image.Image, options *Optio
 //	)
 //	dst := image.NewRGBA(g.Bounds(src.Bounds()))
 //	g.Draw(dst, src)
-//
 func Convolution(kernel []float32, normalize, alpha, abs bool, delta float32) Filter {
 	return &convolutionFilter{
 		kernel:    kernel,
@@ -278,7 +277,7 @@ func convolve1dv(dst draw.Image, src image.Image, kernel []float32, options *Opt
 	if srcb.Dx() <= 0 || srcb.Dy() <= 0 {
 		return
 	}
-	if kernel == nil || len(kernel) < 1 {
+	if len(kernel) < 1 {
 		copyimage(dst, src, options)
 		return
 	}
@@ -303,7 +302,7 @@ func convolve1dh(dst draw.Image, src image.Image, kernel []float32, options *Opt
 	if srcb.Dx() <= 0 || srcb.Dy() <= 0 {
 		return
 	}
-	if kernel == nil || len(kernel) < 1 {
+	if len(kernel) < 1 {
 		copyimage(dst, src, options)
 		return
 	}
@@ -384,7 +383,6 @@ func (p *gausssianBlurFilter) Draw(dst draw.Image, src image.Image, options *Opt
 //	)
 //	dst := image.NewRGBA(g.Bounds(src.Bounds()))
 //	g.Draw(dst, src)
-//
 func GaussianBlur(sigma float32) Filter {
 	return &gausssianBlurFilter{
 		sigma: sigma,
@@ -460,7 +458,6 @@ func (p *unsharpMaskFilter) Draw(dst draw.Image, src image.Image, options *Optio
 //	)
 //	dst := image.NewRGBA(g.Bounds(src.Bounds()))
 //	g.Draw(dst, src)
-//
 func UnsharpMask(sigma, amount, threshold float32) Filter {
 	return &unsharpMaskFilter{
 		sigma:     sigma,
@@ -567,7 +564,6 @@ func (p *hvConvolutionFilter) Draw(dst draw.Image, src image.Image, options *Opt
 			}
 		}
 	})
-
 }
 
 // Sobel creates a filter that applies a sobel operator to an image.
