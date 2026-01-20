@@ -20,9 +20,8 @@ func (p *testFilter) Bounds(srcBounds image.Rectangle) (dstBounds image.Rectangl
 	return
 }
 
-func (p *testFilter) Draw(dst draw.Image, src image.Image, options *Options) error {
+func (p *testFilter) Draw(dst draw.Image, src image.Image, options *Options) {
 	dst.Set(dst.Bounds().Min.X, dst.Bounds().Min.Y, color.Gray{123})
-	return nil
 }
 
 func TestGIFT(t *testing.T) {

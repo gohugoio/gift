@@ -14,7 +14,7 @@ func (p *pixelateFilter) Bounds(srcBounds image.Rectangle) (dstBounds image.Rect
 	return
 }
 
-func (p *pixelateFilter) Draw(dst draw.Image, src image.Image, options *Options) error {
+func (p *pixelateFilter) Draw(dst draw.Image, src image.Image, options *Options) {
 	if options == nil {
 		options = &defaultOptions
 	}
@@ -22,7 +22,7 @@ func (p *pixelateFilter) Draw(dst draw.Image, src image.Image, options *Options)
 	blockSize := p.size
 	if blockSize <= 1 {
 		copyimage(dst, src, options)
-		return nil
+		return
 	}
 
 	srcb := src.Bounds()
@@ -77,8 +77,6 @@ func (p *pixelateFilter) Draw(dst draw.Image, src image.Image, options *Options)
 			}
 		}
 	})
-
-	return nil
 }
 
 // Pixelate creates a filter that applies a pixelation effect to an image.

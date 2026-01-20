@@ -27,7 +27,7 @@ import (
 // Filter is an image processing filter.
 type Filter interface {
 	// Draw applies the filter to the src image and outputs the result to the dst image.
-	Draw(dst draw.Image, src image.Image, options *Options) error
+	Draw(dst draw.Image, src image.Image, options *Options)
 	// Bounds calculates the appropriate bounds of an image after applying the filter.
 	Bounds(srcBounds image.Rectangle) (dstBounds image.Rectangle)
 }
@@ -116,9 +116,7 @@ func (g *GIFT) Draw(dst draw.Image, src image.Image) error {
 			tmpOut = createTempImage(f.Bounds(tmpIn.Bounds()))
 		}
 
-		if err := f.Draw(tmpOut, tmpIn, &g.options); err != nil {
-			return err
-		}
+		f.Draw(tmpOut, tmpIn, &g.options)
 	}
 	return nil
 }

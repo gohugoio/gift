@@ -82,7 +82,7 @@ func (p *convolutionFilter) Bounds(srcBounds image.Rectangle) (dstBounds image.R
 	return
 }
 
-func (p *convolutionFilter) Draw(dst draw.Image, src image.Image, options *Options) error {
+func (p *convolutionFilter) Draw(dst draw.Image, src image.Image, options *Options) {
 	if options == nil {
 		options = &defaultOptions
 	}
@@ -91,7 +91,7 @@ func (p *convolutionFilter) Draw(dst draw.Image, src image.Image, options *Optio
 	dstb := dst.Bounds()
 
 	if srcb.Dx() <= 0 || srcb.Dy() <= 0 {
-		return nil
+		return
 	}
 
 	ksize, weights := prepareConvolutionWeights(p.kernel, p.normalize)
@@ -99,7 +99,7 @@ func (p *convolutionFilter) Draw(dst draw.Image, src image.Image, options *Optio
 
 	if ksize < 1 {
 		copyimage(dst, src, options)
-		return nil
+		return
 	}
 
 	pixGetter := newPixelGetter(src)
@@ -177,8 +177,6 @@ func (p *convolutionFilter) Draw(dst draw.Image, src image.Image, options *Optio
 			}
 		}
 	})
-
-	return nil
 }
 
 // Convolution creates a filter that applies a square convolution kernel to an image.
@@ -334,19 +332,19 @@ func (p *gausssianBlurFilter) Bounds(srcBounds image.Rectangle) (dstBounds image
 	return
 }
 
-func (p *gausssianBlurFilter) Draw(dst draw.Image, src image.Image, options *Options) error {
+func (p *gausssianBlurFilter) Draw(dst draw.Image, src image.Image, options *Options) {
 	if options == nil {
 		options = &defaultOptions
 	}
 
 	srcb := src.Bounds()
 	if srcb.Dx() <= 0 || srcb.Dy() <= 0 {
-		return nil
+		return
 	}
 
 	if p.sigma <= 0 {
 		copyimage(dst, src, options)
-		return nil
+		return
 	}
 
 	radius := int(math.Ceil(float64(p.sigma * 3)))
@@ -371,8 +369,6 @@ func (p *gausssianBlurFilter) Draw(dst draw.Image, src image.Image, options *Opt
 	tmp := createTempImage(srcb)
 	convolve1dh(tmp, src, kernel, options)
 	convolve1dv(dst, tmp, kernel, options)
-
-	return nil
 }
 
 // GaussianBlur creates a filter that applies a gaussian blur to an image.
@@ -411,7 +407,7 @@ func unsharp(orig, blurred, amount, threshold float32) float32 {
 	return orig
 }
 
-func (p *unsharpMaskFilter) Draw(dst draw.Image, src image.Image, options *Options) error {
+func (p *unsharpMaskFilter) Draw(dst draw.Image, src image.Image, options *Options) {
 	if options == nil {
 		options = &defaultOptions
 	}
@@ -420,7 +416,7 @@ func (p *unsharpMaskFilter) Draw(dst draw.Image, src image.Image, options *Optio
 	dstb := dst.Bounds()
 
 	if srcb.Dx() <= 0 || srcb.Dy() <= 0 {
-		return nil
+		return
 	}
 
 	blurred := createTempImage(srcb)
@@ -446,8 +442,6 @@ func (p *unsharpMaskFilter) Draw(dst draw.Image, src image.Image, options *Optio
 			}
 		}
 	})
-
-	return nil
 }
 
 // UnsharpMask creates a filter that sharpens an image.
@@ -481,14 +475,14 @@ func (p *meanFilter) Bounds(srcBounds image.Rectangle) (dstBounds image.Rectangl
 	return
 }
 
-func (p *meanFilter) Draw(dst draw.Image, src image.Image, options *Options) error {
+func (p *meanFilter) Draw(dst draw.Image, src image.Image, options *Options) {
 	if options == nil {
 		options = &defaultOptions
 	}
 
 	srcb := src.Bounds()
 	if srcb.Dx() <= 0 || srcb.Dy() <= 0 {
-		return nil
+		return
 	}
 
 	ksize := p.ksize
@@ -498,7 +492,7 @@ func (p *meanFilter) Draw(dst draw.Image, src image.Image, options *Options) err
 
 	if ksize <= 1 {
 		copyimage(dst, src, options)
-		return nil
+		return
 	}
 
 	if p.disk {
@@ -513,8 +507,6 @@ func (p *meanFilter) Draw(dst draw.Image, src image.Image, options *Options) err
 		f := Convolution(kernel, true, true, false, 0)
 		f.Draw(dst, src, options)
 	}
-
-	return nil
 }
 
 // Mean creates a local mean image filter.
@@ -537,7 +529,7 @@ func (p *hvConvolutionFilter) Bounds(srcBounds image.Rectangle) (dstBounds image
 	return
 }
 
-func (p *hvConvolutionFilter) Draw(dst draw.Image, src image.Image, options *Options) error {
+func (p *hvConvolutionFilter) Draw(dst draw.Image, src image.Image, options *Options) {
 	if options == nil {
 		options = &defaultOptions
 	}
@@ -546,7 +538,7 @@ func (p *hvConvolutionFilter) Draw(dst draw.Image, src image.Image, options *Opt
 	dstb := dst.Bounds()
 
 	if srcb.Dx() <= 0 || srcb.Dy() <= 0 {
-		return nil
+		return
 	}
 
 	tmph := createTempImage(srcb)
@@ -571,8 +563,6 @@ func (p *hvConvolutionFilter) Draw(dst draw.Image, src image.Image, options *Opt
 			}
 		}
 	})
-
-	return nil
 }
 
 // Sobel creates a filter that applies a sobel operator to an image.

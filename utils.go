@@ -216,7 +216,6 @@ func (p *copyimageFilter) Bounds(srcBounds image.Rectangle) (dstBounds image.Rec
 	return
 }
 
-func (p *copyimageFilter) Draw(dst draw.Image, src image.Image, options *Options) error {
+func (p *copyimageFilter) Draw(dst draw.Image, src image.Image, options *Options) {
 	copyimage(dst, src, options)
-	return nil
 }

@@ -31,7 +31,7 @@ func (p *colorchanFilter) Bounds(srcBounds image.Rectangle) (dstBounds image.Rec
 	return
 }
 
-func (p *colorchanFilter) Draw(dst draw.Image, src image.Image, options *Options) error {
+func (p *colorchanFilter) Draw(dst draw.Image, src image.Image, options *Options) {
 	if options == nil {
 		options = &defaultOptions
 	}
@@ -79,8 +79,6 @@ func (p *colorchanFilter) Draw(dst draw.Image, src image.Image, options *Options
 			}
 		}
 	})
-
-	return nil
 }
 
 // Invert creates a filter that negates the colors of an image.
@@ -226,7 +224,7 @@ func (p *colorFilter) Bounds(srcBounds image.Rectangle) (dstBounds image.Rectang
 	return
 }
 
-func (p *colorFilter) Draw(dst draw.Image, src image.Image, options *Options) error {
+func (p *colorFilter) Draw(dst draw.Image, src image.Image, options *Options) {
 	if options == nil {
 		options = &defaultOptions
 	}
@@ -244,8 +242,6 @@ func (p *colorFilter) Draw(dst draw.Image, src image.Image, options *Options) er
 			}
 		}
 	})
-
-	return nil
 }
 
 // Grayscale creates a filter that produces a grayscale version of an image.
