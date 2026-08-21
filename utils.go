@@ -11,11 +11,9 @@ import (
 func parallelize(procs int, start, stop int, fn func(start, stop int)) {
 	var wg sync.WaitGroup
 	splitRange(start, stop, procs, func(pstart, pstop int) {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			fn(pstart, pstop)
-		}()
+		})
 	})
 	wg.Wait()
 }

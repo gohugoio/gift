@@ -44,10 +44,7 @@ func TestSplitRange(t *testing.T) {
 				parts = append(parts, [2]int{start, stop})
 			})
 
-			wantLen := max(procs, 1)
-			if wantLen > count {
-				wantLen = count
-			}
+			wantLen := min(max(procs, 1), count)
 			if len(parts) != wantLen {
 				t.Fatalf("test [count=%d procs=%d] got len(parts) %d want %d", count, procs, len(parts), wantLen)
 			}
